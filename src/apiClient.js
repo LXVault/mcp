@@ -38,4 +38,15 @@ export const apiClient = {
   getProject: () => request('/mcp/project'),
   search: (query, limit) => request('/mcp/search', { method: 'POST', body: { query, limit } }),
   addKnowledge: (content) => request('/mcp/knowledge', { method: 'POST', body: { content } }),
+
+  // Project management. The backend derives the acting user + project from the
+  // token and enforces owner/admin server-side.
+  createProject: (title, summary) =>
+    request('/mcp/projects', { method: 'POST', body: { title, summary } }),
+  changeProjectTitle: (title) =>
+    request('/mcp/project/title', { method: 'PUT', body: { title } }),
+  changeProjectDescription: (description) =>
+    request('/mcp/project/description', { method: 'PUT', body: { description } }),
+  addMember: (identifier, role) =>
+    request('/mcp/project/members', { method: 'POST', body: { identifier, role } }),
 };
