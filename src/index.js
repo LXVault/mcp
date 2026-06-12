@@ -64,11 +64,12 @@ server.tool(
   }
 );
 
-// search_knowledge — text search over the project's knowledge base.
+// search_knowledge — semantic search over the project's knowledge base.
 server.tool(
   'search_knowledge',
-  "Search the project's knowledge base for chunks matching a query. " +
-    'Returns the most relevant text chunks.',
+  "Semantic search over the project's knowledge base: ranks chunks by meaning " +
+    "using the project's embedding model. Requires the user to have set their " +
+    'own OpenRouter API key in the web app (Profile).',
   {
     query: z.string().min(1).describe('The text to search for.'),
     limit: z
@@ -93,7 +94,8 @@ server.tool(
 server.tool(
   'add_knowledge',
   "Save a piece of text as a new chunk in the project's knowledge base so it " +
-    'can be retrieved later with search_knowledge.',
+    'can be retrieved later with search_knowledge. The chunk is embedded with ' +
+    "the project's model, so the user's OpenRouter API key must be set in the web app.",
   {
     content: z.string().min(1).describe('The text to store as a knowledge chunk.'),
   },

@@ -14,8 +14,23 @@ traceable back to the user who generated the token.
 | --- | --- |
 | `whoami` | Identify the user and project the current token is bound to. |
 | `get_project` | Project details: title, summary, and knowledge-base chunk count. |
-| `search_knowledge` | Search the project's knowledge base (`query`, optional `limit`). |
+| `search_knowledge` | Semantic search over the project's knowledge base (`query`, optional `limit`). |
 | `add_knowledge` | Save text as a new chunk in the project's knowledge base (`content`). |
+
+## Semantic search prerequisites
+
+`search_knowledge` and `add_knowledge` use **vector embeddings** via OpenRouter,
+so before they work the acting user must:
+
+1. **Add their own OpenRouter API key** in the web app (**Profile → OpenRouter
+   API key**). Each user uses their own key; it is encrypted at rest and used
+   only for that user's queries. (If an owner wants to sponsor cost, they hand
+   out a limited OpenRouter key for members to paste as their personal key.)
+2. Optionally have the project owner/admin pick the **embedding model** for the
+   project (**Members → Embedding model**; default `openai/text-embedding-3-small`).
+
+If the user has no key set, these tools return a clear error telling them to add
+one. `whoami` and `get_project` work without a key.
 
 ## Setup
 
