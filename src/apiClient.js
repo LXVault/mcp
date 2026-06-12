@@ -37,4 +37,5 @@ export const apiClient = {
   me: () => request('/mcp/me'),
   getProject: () => request('/mcp/project'),
   search: (query, limit) => request('/mcp/search', { method: 'POST', body: { query, limit } }),
+  addKnowledge: (content) => request('/mcp/knowledge', { method: 'POST', body: { content } }),
 };

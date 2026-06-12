@@ -15,6 +15,7 @@ traceable back to the user who generated the token.
 | `whoami` | Identify the user and project the current token is bound to. |
 | `get_project` | Project details: title, summary, and knowledge-base chunk count. |
 | `search_knowledge` | Search the project's knowledge base (`query`, optional `limit`). |
+| `add_knowledge` | Save text as a new chunk in the project's knowledge base (`content`). |
 
 ## Setup
 

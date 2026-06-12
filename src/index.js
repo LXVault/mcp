@@ -89,13 +89,31 @@ server.tool(
   }
 );
 
+// add_knowledge — append a new chunk to the project's knowledge base.
+server.tool(
+  'add_knowledge',
+  "Save a piece of text as a new chunk in the project's knowledge base so it " +
+    'can be retrieved later with search_knowledge.',
+  {
+    content: z.string().min(1).describe('The text to store as a knowledge chunk.'),
+  },
+  async ({ content }) => {
+    try {
+      const data = await apiClient.addKnowledge(content);
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
 async function main() {
   assertConfigured();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // Log to stderr so we never corrupt the stdio JSON-RPC channel on stdout.
   console.error(
-    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge`
+    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge, add_knowledge`
   );
 }
 
