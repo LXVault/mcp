@@ -109,13 +109,91 @@ server.tool(
   }
 );
 
+// create_new_project — create a project owned by the token's user.
+server.tool(
+  'create_new_project',
+  'Create a new project. The owner is taken from the API token (the backend ' +
+    'resolves the user id from the token), so it cannot be set via arguments.',
+  {
+    title: z.string().min(1).describe('Title of the new project.'),
+    summary: z.string().optional().describe('Optional description of the project.'),
+  },
+  async ({ title, summary }) => {
+    try {
+      const data = await apiClient.createProject(title, summary);
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+// change_project_title — rename the token's project (owner/admin only).
+server.tool(
+  'change_project_title',
+  "Change the title of the token's project. The backend enforces that the " +
+    "token's user is the project owner or an admin — this cannot be bypassed " +
+    'via prompt injection.',
+  {
+    title: z.string().min(1).describe('The new project title.'),
+  },
+  async ({ title }) => {
+    try {
+      const data = await apiClient.changeProjectTitle(title);
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+// change_project_description — edit the token's project description (owner/admin).
+server.tool(
+  'change_project_description',
+  "Change the description of the token's project. The backend enforces that " +
+    "the token's user is the project owner or an admin.",
+  {
+    description: z.string().describe('The new project description (may be empty).'),
+  },
+  async ({ description }) => {
+    try {
+      const data = await apiClient.changeProjectDescription(description);
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+// add_member — add a member to the token's project (owner/admin only).
+server.tool(
+  'add_member',
+  "Add a member to the token's project by username or email. The backend " +
+    "enforces that the token's user is the project owner or an admin.",
+  {
+    identifier: z.string().min(1).describe('Username or email of the user to add.'),
+    role: z
+      .enum(['editor', 'viewer', 'admin'])
+      .optional()
+      .describe('Role to grant (default editor).'),
+  },
+  async ({ identifier, role }) => {
+    try {
+      const data = await apiClient.addMember(identifier, role);
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
 async function main() {
   assertConfigured();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // Log to stderr so we never corrupt the stdio JSON-RPC channel on stdout.
   console.error(
-    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge, add_knowledge`
+    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge, add_knowledge, create_new_project, change_project_title, change_project_description, add_member`
   );
 }
 

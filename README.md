@@ -16,6 +16,15 @@ traceable back to the user who generated the token.
 | `get_project` | Project details: title, summary, and knowledge-base chunk count. |
 | `search_knowledge` | Semantic search over the project's knowledge base (`query`, optional `limit`). |
 | `add_knowledge` | Save text as a new chunk in the project's knowledge base (`content`). |
+| `create_new_project` | Create a project owned by the token's user (`title`, optional `summary`). |
+| `change_project_title` | Rename the token's project (`title`). Owner/admin only. |
+| `change_project_description` | Edit the token's project description (`description`). Owner/admin only. |
+| `add_member` | Add a member to the token's project (`identifier`, optional `role`). Owner/admin only. |
+
+> **Authorization & prompt-injection safety:** the project-management tools never
+> trust the caller's claimed identity or target. The backend resolves the acting
+> user and project **from the API token** and enforces owner/admin server-side, so
+> a prompt-injected tool call cannot escalate privileges or act on another project.
 
 ## Semantic search prerequisites
 
