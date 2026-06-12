@@ -1,0 +1,27 @@
+{
+  "name": "mcp-rag-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for the MCP RAG knowledge base. Authenticates with a per-project token so every action is traceable to a user.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "mcp-rag-server": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "rag",
+    "knowledge-base"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  }
+}
