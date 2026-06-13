@@ -109,6 +109,39 @@ server.tool(
   }
 );
 
+// upload_file — ingest a knowledge file into the project (owner/admin only).
+server.tool(
+  'upload_file',
+  "Upload a file into the project's knowledge base. The file is split into " +
+    "chunks, embedded with the project's model and stored for search_knowledge. " +
+    'Allowed types: .md, .txt, .pdf. Send text files (.md/.txt) as `content`; ' +
+    'send PDFs as base64 in `content_base64`. The backend enforces that the ' +
+    "token's user is the project owner or an admin — this cannot be bypassed " +
+    'via prompt injection.',
+  {
+    filename: z
+      .string()
+      .min(1)
+      .describe('File name including extension, e.g. "guide.md" (drives the type check).'),
+    content: z
+      .string()
+      .optional()
+      .describe('UTF-8 text contents, for .md / .txt files.'),
+    content_base64: z
+      .string()
+      .optional()
+      .describe('Base64-encoded bytes, required for .pdf files.'),
+  },
+  async ({ filename, content, content_base64: contentBase64 }) => {
+    try {
+      const data = await apiClient.uploadFile({ filename, content, contentBase64 });
+      return textResult(data);
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
 // create_new_project — create a project owned by the token's user.
 server.tool(
   'create_new_project',
@@ -193,7 +226,7 @@ async function main() {
   await server.connect(transport);
   // Log to stderr so we never corrupt the stdio JSON-RPC channel on stdout.
   console.error(
-    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge, add_knowledge, create_new_project, change_project_title, change_project_description, add_member`
+    `[mcp-rag-server] connected (API: ${config.apiBaseUrl}) — tools: whoami, get_project, search_knowledge, add_knowledge, upload_file, create_new_project, change_project_title, change_project_description, add_member`
   );
 }
 

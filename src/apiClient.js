@@ -49,4 +49,9 @@ export const apiClient = {
     request('/mcp/project/description', { method: 'PUT', body: { description } }),
   addMember: (identifier, role) =>
     request('/mcp/project/members', { method: 'POST', body: { identifier, role } }),
+
+  // Upload a knowledge file. Text files (.md/.txt) go as `content`; binary
+  // files (.pdf) as base64 in `contentBase64`. Owner/admin enforced server-side.
+  uploadFile: ({ filename, content, contentBase64 }) =>
+    request('/mcp/files', { method: 'POST', body: { filename, content, contentBase64 } }),
 };

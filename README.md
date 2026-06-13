@@ -16,6 +16,7 @@ traceable back to the user who generated the token.
 | `get_project` | Project details: title, summary, and knowledge-base chunk count. |
 | `search_knowledge` | Semantic search over the project's knowledge base (`query`, optional `limit`). |
 | `add_knowledge` | Save text as a new chunk in the project's knowledge base (`content`). |
+| `upload_file` | Upload a `.md`/`.txt`/`.pdf` file into the knowledge base (`filename` + `content` text, or `content_base64` for PDFs). It is chunked and embedded. Owner/admin only. |
 | `create_new_project` | Create a project owned by the token's user (`title`, optional `summary`). |
 | `change_project_title` | Rename the token's project (`title`). Owner/admin only. |
 | `change_project_description` | Edit the token's project description (`description`). Owner/admin only. |
@@ -28,8 +29,8 @@ traceable back to the user who generated the token.
 
 ## Semantic search prerequisites
 
-`search_knowledge` and `add_knowledge` use **vector embeddings** via OpenRouter,
-so before they work the acting user must:
+`search_knowledge`, `add_knowledge` and `upload_file` use **vector embeddings**
+via OpenRouter, so before they work the acting user must:
 
 1. **Add their own OpenRouter API key** in the web app (**Profile → OpenRouter
    API key**). Each user uses their own key; it is encrypted at rest and used
