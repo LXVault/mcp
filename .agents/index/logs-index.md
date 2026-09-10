@@ -12,6 +12,7 @@ description: Release history of this MCP server, newest version first, with the 
 
 | Version | Summary | Files |
 |---|---|---|
+| [`1.1.0`](../../wiki/logs/1/1/0/CHANGELOG.md) | Tool descriptions that explain embedding coverage, so an uncovered knowledge base is not reported as empty. | `CHANGELOG.md` |
 | [`1.0.0`](../../wiki/logs/1/0/0/CHANGELOG.md) | The nine tools as they stand, plus the agent instruction, knowledge and memory system. | `CHANGELOG.md` |
 
 ## Maintenance

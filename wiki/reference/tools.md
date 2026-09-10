@@ -7,7 +7,7 @@ Nine tools, each a single call to the backend. Arguments are snake case on the w
 | Tool | Arguments | Returns |
 |---|---|---|
 | `whoami` | none | The user and project the current token is bound to. Use it to confirm whose context an action will be attributed to. |
-| `get_project` | none | Project details: title, summary, and the knowledge base chunk count. |
+| `get_project` | none | Project details: title, summary, embedding model, and three chunk counts. See Coverage below. |
 
 Neither needs an OpenRouter key.
 
@@ -15,7 +15,7 @@ Neither needs an OpenRouter key.
 
 | Tool | Arguments | Returns |
 |---|---|---|
-| `search_knowledge` | `query` (string), `limit` (int 1 to 25, default 5) | Chunks ranked by meaning, each with a similarity score. |
+| `search_knowledge` | `query` (string), `limit` (int 1 to 25, default 5) | Chunks ranked by meaning, each with a similarity score, plus a `coverage` block. See Coverage below. |
 | `add_knowledge` | `content` (string) | The chunk that was created, with its index. |
 | `upload_file` | `filename` (string, extension drives the type check), `content` (UTF-8 text, for `.md` and `.txt`), `content_base64` (for `.pdf`) | The stored file record and its chunk count. Owner or admin only. |
 
@@ -29,6 +29,33 @@ All three embed text and therefore require an OpenRouter key. See the prerequisi
 | `change_project_title` | `title` (string) | The updated project. Owner or admin only. |
 | `change_project_description` | `description` (string, may be empty) | The updated project. Owner or admin only. |
 | `add_member` | `identifier` (username or email), `role` (`editor`, `viewer` or `admin`, default `editor`) | The member that was added or updated. Owner or admin only. |
+
+## Coverage
+
+The backend stores one vector per chunk per embedding model, so a project can hold vectors
+for several models at once and changing its model deletes nothing. What follows from that:
+**search only reaches chunks embedded with the model the project currently uses.**
+
+`get_project` reports three numbers:
+
+| Field | Means |
+|---|---|
+| `chunk_count` | Every chunk stored in the knowledge base. |
+| `searchable_chunk_count` | How many of those `search_knowledge` can actually reach. |
+| `chunks_awaiting_embedding` | The difference: chunks with no vector for the current model. |
+
+`search_knowledge` returns the same information as a `coverage` block beside its results.
+
+**Read it before reporting an empty result.** Zero results with
+`chunks_awaiting_embedding` at zero means nothing matched the query. Zero results with
+`chunks_awaiting_embedding` above zero means something different: the project changed
+embedding model and its knowledge base has not been embedded with the new one yet. Nothing
+was lost, and the project owner or an admin can generate the missing embeddings from the
+web app, on the members screen. Saying "nothing was found" in that case is wrong and sends
+the user looking for content that is already there.
+
+`add_knowledge` is unaffected: a chunk it creates is embedded with the current model as it
+is written, so it is searchable immediately whatever coverage the rest of the base has.
 
 ## Authorization and prompt injection safety
 
