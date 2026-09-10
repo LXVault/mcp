@@ -24,6 +24,13 @@ The nine tools as they stand, plus the agent instruction, knowledge and memory s
 
 ## Changed
 
+* `SKILLS.md` moved from the repository root to `.agents/skills/universal.md`, and the
+  folder was registered in the agents index. Only `AGENTS.md`, `README.md` and `LICENSE`
+  belong at the root, and `skills/` is an instruction folder like any other. Its body was
+  filled in, since the original carried frontmatter with no title.
+* `CLAUDE.md` moved to `.claude/CLAUDE.md`, which Claude Code treats as an equivalent
+  project instruction location, so nothing about how it loads changes.
+
 * `README.md` is now an overview. Its detail moved into the wiki rather than being dropped:
   the tool table and the embedding prerequisites to `wiki/reference/tools.md`, the Claude
   Desktop bundle procedure to `wiki/guides/claude-desktop-extension.md`, and the variable
