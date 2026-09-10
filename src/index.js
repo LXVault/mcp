@@ -48,11 +48,18 @@ server.tool(
   }
 );
 
-// get_project — details about the project (title, summary, chunk count).
+// get_project — details about the project, including how much of its knowledge
+// base the currently selected embedding model can actually search.
 server.tool(
   'get_project',
-  'Get details about the project this token grants access to, including its ' +
-    'title, summary and the number of knowledge-base chunks available.',
+  'Get details about the project this token grants access to: its title, ' +
+    'summary, embedding model, and its knowledge-base chunk counts. ' +
+    '`chunk_count` is every chunk stored. `searchable_chunk_count` is how many ' +
+    "of those are embedded with the project's current model, which is the only " +
+    'set search_knowledge can reach. When `chunks_awaiting_embedding` is above ' +
+    'zero, the project switched model and those chunks have not been embedded ' +
+    'with the new one yet; nothing was lost, and the project owner or an admin ' +
+    'can generate the missing embeddings in the web app.',
   {},
   async () => {
     try {
@@ -68,8 +75,13 @@ server.tool(
 server.tool(
   'search_knowledge',
   "Semantic search over the project's knowledge base: ranks chunks by meaning " +
-    "using the project's embedding model. Requires the user to have set their " +
-    'own OpenRouter API key in the web app (Profile).',
+    "using the project's currently selected embedding model. Only chunks " +
+    'embedded with that model are searchable, so the response carries a ' +
+    '`coverage` block alongside the results. Read it before reporting an empty ' +
+    'result: if `chunks_awaiting_embedding` is above zero, the knowledge base ' +
+    'is not fully embedded with the model this project now uses, and the right ' +
+    'answer is to say so rather than that nothing was found. Requires the user ' +
+    'to have set their own OpenRouter API key in the web app (Profile).',
   {
     query: z.string().min(1).describe('The text to search for.'),
     limit: z
@@ -95,7 +107,9 @@ server.tool(
   'add_knowledge',
   "Save a piece of text as a new chunk in the project's knowledge base so it " +
     'can be retrieved later with search_knowledge. The chunk is embedded with ' +
-    "the project's model, so the user's OpenRouter API key must be set in the web app.",
+    "the project's current model, so the user's OpenRouter API key must be set " +
+    'in the web app. The chunk is searchable immediately, whatever coverage the ' +
+    'rest of the knowledge base has.',
   {
     content: z.string().min(1).describe('The text to store as a knowledge chunk.'),
   },

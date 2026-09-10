@@ -35,17 +35,20 @@ connector, adopted version `1.0.0`. Nothing from it is copied into this reposito
 * No `manifest.json` in the repository. The Claude Desktop bundle is documented as a
   procedure and generated when someone packs one.
 
-## Known limitation being worked on
+## Embedding coverage in tool descriptions
 
-Tool descriptions understate what a project's embedding model means. `search_knowledge`
-says it ranks "using the project's embedding model" without saying that only chunks
-embedded with that exact model are searchable, and `get_project` reports a single chunk
-count with no indication of how many of those chunks are actually reachable by search. A
-model reading these will report an empty result as "nothing found" rather than "the
-knowledge base is not embedded with the model this project currently uses".
+Resolved in `1.1.0`, against the backend change of the same version. `get_project` now
+describes `searchable_chunk_count` and `chunks_awaiting_embedding` against `chunk_count`,
+and `search_knowledge` tells the reading model to check the `coverage` block before
+reporting an empty result. No transport or argument changed; the descriptions did, because
+they are what a model reasons from.
+
+Verified by driving the server over real stdio JSON-RPC against a live backend: 9 checks,
+covering tool registration, both descriptions, the coverage fields on `get_project`, a
+search over an uncovered knowledge base returning no rows with seven pending, the same
+search returning ranked rows after a backfill, and stdout carrying nothing but protocol
+messages.
 
 ## Next obvious step
 
-Once the backend keys embeddings on `(chunk_id, model_name)` and reports coverage, say so
-in the `get_project` and `search_knowledge` descriptions so the assistant explains an
-uncovered knowledge base instead of misreporting it as empty.
+Nothing outstanding.

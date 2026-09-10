@@ -29,8 +29,9 @@ That single fact is what makes an assistant's actions accountable:
 
 Nine tools, in three groups:
 
-**Identity.** `whoami` and `get_project` report who and what the token is bound to. Neither
-needs an OpenRouter key.
+**Identity.** `whoami` and `get_project` report who and what the token is bound to, and
+`get_project` also reports how much of the knowledge base the project's current embedding
+model can search. Neither needs an OpenRouter key.
 
 **Knowledge.** `search_knowledge` ranks chunks by meaning, `add_knowledge` saves text as a
 new chunk, and `upload_file` ingests a `.md`, `.txt` or `.pdf`. All three embed text, so
