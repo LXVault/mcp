@@ -20,9 +20,9 @@ argument, no logic on this side. Tools stay thin.
 
 | # | Title | Scope | Repository | Branch | PR |
 |---|---|---|---|---|---|
-| 1 | Schema split, migration, coverage and backfill | The table, the migration, search, ingestion, the API | server-expressjs | `feat/embedding-matrix` | |
-| 2 | Coverage and backfill in the web app | The embedding model card and its API methods | client-reactjs | `feat/embedding-matrix` | |
-| 3 | Tool descriptions that explain coverage | `get_project` and `search_knowledge` wording, the tool reference | mcp | `feat/embedding-matrix` | |
+| 1 | Schema split, migration, coverage and backfill | The table, the migration, search, ingestion, the API | server-expressjs | `feat/embedding-matrix` | 12 |
+| 2 | Coverage and backfill in the web app | The embedding model card and its API methods | client-reactjs | `feat/embedding-matrix` | 9 |
+| 3 | Tool descriptions that explain coverage | `get_project` and `search_knowledge` wording, the tool reference | mcp | `feat/embedding-matrix` | 7 |
 
 ### Task 3 — feat/embedding-matrix
 
@@ -54,3 +54,10 @@ Depends on: task 1. Independent of task 2.
 * **The instruction is explicit rather than implied.** A model that merely sees a `coverage`
   field will not reliably reason about it, so the description says what to do when
   `chunks_awaiting_embedding` is above zero.
+
+## Status
+
+Done. Every branch is pushed and every pull request is open, each stating the pull
+request it merges after. Merging is the user's call and has not been requested.
+
+Record closed.
