@@ -176,8 +176,9 @@ Task 1 is **server-expressjs#14** and task 2 is **mcp#8**; both are open and mer
 and neither is merged. Task 3 is committed on `build/dependency-upgrade`, which stacks on
 `fix/mcp-permission-scope`, so it merges after #8 and #8 merges after #14.
 
-**Two stale claims are in `.agents/rules/repository.md` and are reported, not fixed.**
-It still says every tool is in `src/index.js` when task 2 moved them to `src/tools.js`,
-and it still says there is no test suite when task 2 added one. The discovery protocol
-says an agent does not edit an instruction file on its own initiative, so both are the
-user's to select.
+**Two stale claims in `.agents/rules/repository.md` are corrected.** It said every tool
+lives in `src/index.js`, which task 2 made false, and that there is no test suite, which
+task 2 also made false. The discovery protocol says an agent does not edit an instruction
+file on its own initiative, so both were reported; the user selected both, and the file now
+points at `src/tools.js` and names the one check that exists and says plainly what it does
+not cover.

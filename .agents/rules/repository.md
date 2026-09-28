@@ -17,7 +17,7 @@ the `lxagents-agents-base` MCP connector, as declared in the bootstrap block of
 ## Tools stay thin
 
 A tool validates its arguments with zod, calls one method on `apiClient`, and renders the
-result. That is the whole shape, and every tool in `src/index.js` follows it.
+result. That is the whole shape, and every tool in `src/tools.js` follows it.
 
 * **No business logic here.** No filtering, no merging of two calls, no caching, no
   retries, no derived fields. If a tool needs something the API does not return, the change
@@ -91,6 +91,8 @@ message corrupts the channel and breaks the client.** Every diagnostic goes to s
 ## Running it
 
 `npm start` runs the server, and it exits immediately without `MCP_API_TOKEN` because
-`assertConfigured` refuses to start unconfigured. There is no test suite and no linter, so
-verification is manual: run it against a local backend and drive the tool from an MCP
-client. Report it that way rather than implying a suite ran.
+`assertConfigured` refuses to start unconfigured. There is no test suite and no linter, and
+the one check that exists covers the tool surface and nothing else:
+`node .agents/wiki/context/mcp-tools.js`. Everything past the surface — that a call reaches
+the backend and comes back — is verified by running against a local backend and driving the
+tool from an MCP client. Report that as manual, not as a suite.
