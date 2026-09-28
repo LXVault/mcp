@@ -20,7 +20,7 @@ enforces — and no stronger.
 |---|---|---|---|---|---|
 | 1 | A project token cannot create a project | `createProject`, three stale JSDoc comments | server-expressjs | `fix/mcp-project-creation-scope` | |
 | 2 | The MCP tool surface matches the real scope | `src/index.js`, `src/apiClient.js`, six documents | mcp | `fix/mcp-permission-scope` | |
-| 3 | Every dependency at its current release | SDK 1.30.1, zod 4, `server.tool` → `registerTool` | mcp | `build/dependency-upgrade` | |
+| 3 | Every dependency at its current release | SDK 1.30.1, zod 4, six audit fixes, `server.tool` → `registerTool` | mcp | `build/dependency-upgrade` | |
 
 Task 1 is merge order 1 of 3 and lands first. Task 2 removes the `create_new_project` tool
 because task 1 makes its endpoint return 403 — the two must ship together, or a user briefly
@@ -74,18 +74,84 @@ tool from a comment about one.
 
 ### Task 3 — build/dependency-upgrade
 
-`@modelcontextprotocol/sdk` 1.29.0 → 1.30.1, `zod` 3.25.76 → 4.6.5. SDK 1.30.1 deprecates
-`server.tool()` on every overload in favour of `server.registerTool(name, { description,
-inputSchema }, cb)`; the four-argument form becomes a config object. zod 4 is supported —
-the SDK's peer range is `^3.25 || ^4.0` and it ships a `zod-compat` module, and the
-schemas in use (`z.string().min`, `z.number().int().min().max().optional`, `z.enum`) are
-unchanged between the two majors.
+`@modelcontextprotocol/sdk` 1.29.0 → 1.30.1, `zod` 3.25.76 → 4.6.5, and
+`npm audit fix` for six inherited vulnerabilities, two of them high.
 
-`src/index.js` calls `main()` at module load, so the tool surface cannot be imported and
-asserted on. Task 3 splits the registrations into `src/tools.js` exporting
-`registerTools(server)`, leaving `src/index.js` as wiring, and the harness drives that.
-The extraction and the `registerTool` rewrite touch the same nine call sites, so doing
-them together costs nothing extra.
+**The manifest was the reason nothing had moved.** `package.json` declared
+`^1.0.4` and `^3.23.8` — the floors from the first release — so `npm install` was
+free to install 1.29.0 and 3.25.76 and called the tree up to date. Nothing had
+been left behind deliberately; the ranges simply never moved.
+
+**Six vulnerabilities, and the honest reading of them.** `fast-uri` (high, six
+advisories — host confusion and SSRF in URL parsing) and `ip-address` (high, three
+— SSRF and trust-boundary bypass), plus `qs`, `body-parser`, `hono` and
+`@hono/node-server` at moderate or low. `npm audit fix` takes all six to fixed
+versions, and every one sits inside a range the SDK already declared — the clean
+tree did not wait on the upgrade, and is not lost if the upgrade is reverted.
+
+None of the six was reachable from this server. They arrive through SDK
+subsystems this package never instantiates: `ip-address` under
+`express-rate-limit`, `fast-uri` under `ajv`, `qs` and `body-parser` under
+`express`, `hono` and `@hono/node-server` under the SDK's HTTP and OAuth
+transports. This package builds one `McpServer` and connects one
+`StdioServerTransport`, with no auth provider and no HTTP listener. The tree is
+clean now, and the honest description of that is a clean tree rather than a
+server that was exploitable — which is the same discipline as the injection-safety
+claims removed in task 2, in the other direction.
+
+**`server.tool` was already deprecated, not newly so.** The plan said 1.30.1
+deprecates it. It does, and so did 1.29.0: `@deprecated Use registerTool instead`
+sits on all five `tool()` overloads in the 1.29.0 typings at
+`server/mcp.d.ts:110-146`. The migration is overdue rather than newly required, and
+the record says so rather than crediting a release that was not the cause.
+
+**Two commits, deliberately.** The dependency and audit commit changes the manifest
+and the lockfile and nothing else; `server.tool` is deprecated rather than removed,
+so the surface is untouched and the harness still passed 42/42 off the same path.
+That is the useful property: it proves the bump is behaviour-neutral *before* the
+migration is layered on, and it means a revert of the migration does not take the
+clean tree with it.
+
+**The harness had a gap this task would have walked straight into.** It drove a
+spy, and a spy accepts whatever object it is handed — it would have gone on
+reporting eight correctly-described tools whether or not `registerTool` was a
+method the SDK has, whether or not the config key was spelled right, and whether
+or not zod 4 schemas converted at all. A migration is precisely the change that
+turns that from theoretical into likely.
+
+So the check now runs the surface twice. Through the spy, as before, for what a
+description says and what a zod schema accepts. And through a real `McpServer`
+with a real `Client` across `InMemoryTransport.createLinkedPair()`, asking the
+server what it offers: eight tools, the same eight names in the same order, every
+description delivered intact, `add_member`'s role enum arriving over the wire as
+exactly `["editor","viewer"]`, and the zod 4 constraints that a caller relies on
+still present — `search_knowledge.limit` an optional integer bounded 1 to 25,
+`upload_file` requiring only `filename` and still offering snake-case
+`content_base64`, the two no-argument tools taking none.
+
+**65 assertions, both paths negative-tested.** Putting `admin` back in the enum
+failed three checks — the spy assertion and both wire assertions independently —
+and putting `whoami` back on `server.tool()` failed the deprecated-form check and
+named the tool. The first attempt at the enum negative test did not apply: the
+replacement pattern assumed `z.enum(` on one line, and the file has `z` at the end
+of the line and `.enum(` at the start of the next. It reported 65/0 and proved
+nothing, which is the failure mode worth remembering — a negative test that does
+not apply is indistinguishable from a check that cannot fail.
+
+**Documentation corrected in the same commit**, because the previous task moved
+the surface and left the map describing where it used to live: `repository-map.md`
+said nine tools over three source files and put every registration in
+`src/index.js`; `architecture.md` had the same three-module split. Neither is an
+instruction file, so both are documentation and are fixed here.
+
+**Not edited:** `wiki/logs/1/0/0/CHANGELOG.md` and `wiki/logs/1/1/0/CHANGELOG.md`
+both say nine tools, and `.agents/index/logs-index.md` repeats it. They were true
+at 1.0.0. A dated log records what happened.
+
+**No version bump.** `package.json` reads `1.0.0` and `src/index.js` names
+`1.0.0` separately, while `wiki/logs/1/1/0/CHANGELOG.md` exists. Creating a
+`wiki/logs/{M}/{m}/{p}/` directory is a version claim, and this record is not the
+place to make one.
 
 ## Decisions
 
@@ -106,5 +172,12 @@ them together costs nothing extra.
 
 ## Status
 
-Tasks 1 and 2 are committed on their branches. Task 3 is not started. No pull request has
-been opened and nothing has been merged — both gates are separate and closed.
+Task 1 is **server-expressjs#14** and task 2 is **mcp#8**; both are open and mergeable,
+and neither is merged. Task 3 is committed on `build/dependency-upgrade`, which stacks on
+`fix/mcp-permission-scope`, so it merges after #8 and #8 merges after #14.
+
+**Two stale claims are in `.agents/rules/repository.md` and are reported, not fixed.**
+It still says every tool is in `src/index.js` when task 2 moved them to `src/tools.js`,
+and it still says there is no test suite when task 2 added one. The discovery protocol
+says an agent does not edit an instruction file on its own initiative, so both are the
+user's to select.
