@@ -12,19 +12,27 @@ generated that token.
 
 ## Tools
 
-Nine, in three groups:
+Eight, in three groups:
 
 * **Identity**: `whoami`, `get_project`.
 * **Knowledge**: `search_knowledge`, `add_knowledge`, `upload_file`.
-* **Project management**: `create_new_project`, `change_project_title`,
-  `change_project_description`, `add_member`.
+* **Project management**: `change_project_title`, `change_project_description`,
+  `add_member`.
 
 Arguments, return values and the embedding prerequisites:
 [Tools reference](wiki/reference/tools.md).
 
 The project management tools never trust a claimed identity or target. The backend resolves
-the acting user and the project from the token and enforces owner and admin server side, so
-a prompt injected tool call cannot escalate privileges or act on another project.
+the acting user and the project from the token and enforces the scope server side, so a
+prompt injected tool call cannot act as a different user or reach a different project.
+
+That is the guarantee, and it is worth being exact about what it is not: it does **not**
+make these tools injection-proof. A prompt injected call can still invoke any tool the
+token's user is authorized to invoke. Two things follow. `add_member` does not offer
+`admin`, because granting it is the one action whose worst outcome is durable — an admin
+can hand the role on, and an assistant can be talked into it by a document in the
+knowledge base. And a token should be minted for a project whose contents you would still
+be willing to read if an attacker could write them.
 
 ## Quick start
 

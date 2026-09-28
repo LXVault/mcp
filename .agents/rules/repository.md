@@ -37,14 +37,26 @@ repository decides who the caller is or what they may do.
 
 **This is a security property, not a division of labour.** The caller here is a language
 model, so any identity, project, or role carried in a tool argument is something a prompt
-injection can set. The backend resolves all three from the token and enforces owner and
-admin server side.
+injection can set. The backend resolves all three from the token and enforces the scope
+server side.
 
 * Never add a tool argument naming a project, a user id, or a role to act as.
 * Never add a client side permission check. A check here would be advisory at best and
   misleading at worst, since it suggests the guarantee lives on this side.
-* Say so in the tool description, as the existing project management tools do. The model
-  reading it should understand it cannot talk its way past the check.
+* Say so in the tool description, as the existing project management tools do.
+
+**State the guarantee at its true width, and no wider.** What the token fixes is *who* is
+acting and *which project* is in reach. It does not decide whether that user was trying: a
+prompt injected call can still invoke any tool the token's user is authorized to invoke.
+
+* Never describe a tool as injection-proof, or say a check "cannot be bypassed via prompt
+  injection". That claim was in this file and in five tool descriptions, and it was false.
+  Overstating it is worse than omitting it, because it tells a reader to rely on a property
+  the system does not have.
+* Where a tool's reach is genuinely dangerous, shrink the surface rather than describing it
+  safely. `add_member` does not offer `admin` and project creation is not a tool at all;
+  both were the response to an escalation path, and neither could be closed by wording.
+
 
 ## Tool descriptions are the interface
 

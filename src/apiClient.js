@@ -40,9 +40,11 @@ export const apiClient = {
   addKnowledge: (content) => request('/mcp/knowledge', { method: 'POST', body: { content } }),
 
   // Project management. The backend derives the acting user + project from the
-  // token and enforces owner/admin server-side.
-  createProject: (title, summary) =>
-    request('/mcp/projects', { method: 'POST', body: { title, summary } }),
+  // token and enforces the scope server-side.
+  //
+  // There is deliberately no `createProject`. POST /api/mcp/projects is refused
+  // outright — a project token is minted for one project, and creating one is not
+  // work scoped to that project. Projects are created in the web app.
   changeProjectTitle: (title) =>
     request('/mcp/project/title', { method: 'PUT', body: { title } }),
   changeProjectDescription: (description) =>
@@ -51,7 +53,7 @@ export const apiClient = {
     request('/mcp/project/members', { method: 'POST', body: { identifier, role } }),
 
   // Upload a knowledge file. Text files (.md/.txt) go as `content`; binary
-  // files (.pdf) as base64 in `contentBase64`. Owner/admin enforced server-side.
+  // files (.pdf) as base64 in `contentBase64`. Write access enforced server-side.
   uploadFile: ({ filename, content, contentBase64 }) =>
     request('/mcp/files', { method: 'POST', body: { filename, content, contentBase64 } }),
 };
