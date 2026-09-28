@@ -172,9 +172,16 @@ place to make one.
 
 ## Status
 
-Task 1 is **server-expressjs#14** and task 2 is **mcp#8**; both are open and mergeable,
-and neither is merged. Task 3 is committed on `build/dependency-upgrade`, which stacks on
-`fix/mcp-permission-scope`, so it merges after #8 and #8 merges after #14.
+All three tasks merged. Task 1 is `server-expressjs` #14, merged as `10d9ccf`. Task 2 is
+`mcp` #8, merged as `c47a3d2`, re-targeted to `master` before merging. Task 3 is `mcp` #9,
+merged as `e356359`, also re-targeted first. Every branch the chain produced has been
+deleted, locally and on the remote.
+
+**Neither #8 nor #9 is in a changelog.** They merged after 1.1.0, and the release they would
+belong to does not exist. `version-single-source.md` records this and the reason it was not
+created here: releasing them as 1.2.0 is a version claim, and the version rule requires the
+user's approval. Until that decision is made, `wiki/logs/1/1/0/CHANGELOG.md` is the newest
+release note and it does not describe the current code.
 
 **Two stale claims in `.agents/rules/repository.md` are corrected.** It said every tool
 lives in `src/index.js`, which task 2 made false, and that there is no test suite, which
