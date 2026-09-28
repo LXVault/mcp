@@ -62,3 +62,33 @@ Reading before planning found the third copy. The first two are the obvious ones
 carries a fourth literal inside its worked manifest example, and a task scoped to "the two
 files that disagree" would have left a packed bundle reporting the old version to the one
 audience that installs it.
+
+### Task 2 — fix/version-single-source
+
+`src/index.js` now reads the version out of `package.json` through `createRequire` and hands
+it to the `McpServer` constructor, so there is one place to change it. `package.json` moves
+to `1.1.0`. `repository-state.md` and the worked manifest in the Claude Desktop guide move
+with it.
+
+**Verified on the wire, not by reading the file.** A real stdio JSON-RPC `initialize` was
+sent to the server and the `serverInfo` it answered with inspected:
+
+```
+[mcp-rag-server] connected (API: http://127.0.0.1:4000) — tools: whoami, get_project,
+  search_knowledge, add_knowledge, upload_file, change_project_title,
+  change_project_description, add_member
+serverInfo: {"name":"mcp-rag-server","version":"1.1.0"}
+```
+
+That is the value a client is told, which is the whole point — the defect was never that
+the file said `1.0.0`, it was that the handshake did. Checking `package.json` with `grep`
+would have passed before the fix and proved nothing.
+
+The existing surface harness still passes: 65 assertions, 0 failures, and the eight tools
+are the eight the documentation lists.
+
+**Not changed:** `mcp-security-scope.md`, which records the drift as it stood when the
+permission-scope work landed. Rewriting a record to match a later correction would make it
+unreliable as a record of what was known at the time. This chain is where the fix lives,
+and the older record points here.
+

@@ -7,8 +7,9 @@ description: Current known state of the mcp-rag-mcp-server after the instruction
 
 ## What exists
 
-A working Model Context Protocol server, version `1.0.0`, ES modules, no build step, three
-source files.
+A working Model Context Protocol server, version `1.1.0`, ES modules, no build step, three
+source files. The version lives in `package.json` and is read from there; `src/index.js`
+no longer carries a second copy that can fall behind it.
 
 Nine tools, all thin calls to the Express backend:
 

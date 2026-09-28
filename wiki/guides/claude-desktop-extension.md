@@ -36,7 +36,7 @@ API URL and the token, are wired up. A working manifest looks like this:
   "manifest_version": "0.2",
   "name": "mcp-rag",
   "display_name": "MCP RAG Knowledge Base",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Per-project, traceable access to the MCP RAG knowledge base.",
   "author": { "name": "LXVault" },
   "license": "MIT",

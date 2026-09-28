@@ -22,15 +22,29 @@
 // The tools themselves live in `tools.js`, so this file is wiring and nothing
 // else, and the surface can be asserted on without connecting a transport.
 
+import { createRequire } from 'node:module';
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { config, assertConfigured } from './config.js';
 import { registerTools, TOOL_NAMES } from './tools.js';
 
+// The version is read, not repeated. It used to be a literal here as well as in
+// package.json, and the two drifted: both said 1.0.0 while 1.1.0 had shipped.
+// The value a client sees in the handshake now has exactly one place it can
+// come from.
+//
+// `createRequire` rather than `import ... with { type: 'json' }`, because that
+// spelling needs Node 20.10+ and the older `assert { type: 'json' }` was
+// removed in Node 22. Neither loads across the `>=18` this package declares;
+// this does.
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
+
 const server = new McpServer({
   name: 'mcp-rag-server',
-  version: '1.0.0',
+  version,
 });
 
 registerTools(server);
