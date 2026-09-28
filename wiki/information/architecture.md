@@ -1,15 +1,21 @@
 # Architecture
 
-## Three modules
+## Four modules
 
 ```
-src/index.js       the executable: tool registrations, result rendering, stdio transport
-  src/apiClient.js one method per backend endpoint, the bearer token, error normalization
-    src/config.js  MCP_API_BASE_URL and MCP_API_TOKEN, plus assertConfigured
+src/index.js       the executable: builds the server, connects stdio, refuses to start
+  src/tools.js       unconfigured. The tool surface: registrations, descriptions,
+                     schemas, result rendering
+    src/apiClient.js one method per backend endpoint, the bearer token, error normalization
+      src/config.js  MCP_API_BASE_URL and MCP_API_TOKEN, plus assertConfigured
 ```
 
 ES modules, Node 18 or newer, no build step and no transpiler. `src/index.js` carries a
 shebang and is the package's `bin` target, so it can be run directly or through `npm start`.
+
+`index.js` and `tools.js` are split so the surface can be checked without connecting a
+transport. `index.js` calls `main()` at module load, which takes over this process's stdin
+and stdout; `tools.js` exports `registerTools(server)` and does nothing on import.
 
 ## A tool call, end to end
 

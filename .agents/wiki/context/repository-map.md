@@ -11,24 +11,30 @@ Read this before editing anything in `mcp-rag-mcp-server`. Underlying facts live
 ## What this is
 
 A Model Context Protocol server, ES modules, Node 18 or newer, no build step. It exposes
-nine tools over stdio, each a thin call to the Express backend in
+eight tools over stdio, each a thin call to the Express backend in
 `LXVault/server-expressjs`. What it exposes and why the token matters:
 [`../../../wiki/information/overview.md`](../../../wiki/information/overview.md).
 
 ## Layout
 
-Three source files, and that is the whole server.
+Four source files, and that is the whole server.
 
 | Path | Holds |
 |---|---|
-| `src/index.js` | The executable. Registers every tool, renders results, connects the stdio transport, and refuses to start unconfigured. |
+| `src/index.js` | The executable and the `bin` target. Builds the `McpServer`, calls `registerTools`, connects the stdio transport, and refuses to start unconfigured. Wiring, and nothing else. |
+| `src/tools.js` | The tool surface: every registration, its description, its schema, and the `textResult` / `errorResult` renderers. Exported as `registerTools(server)`, so a check can drive it with a spy and read back what would be registered. |
 | `src/apiClient.js` | One method per backend endpoint, the bearer token, and error normalization. The only module that calls `fetch`. |
 | `src/config.js` | `MCP_API_BASE_URL` and `MCP_API_TOKEN`, plus `assertConfigured`. |
 
+The split between `index.js` and `tools.js` exists so the surface can be asserted on.
+`index.js` calls `main()` at module load, which connects a transport to this process's
+stdin and stdout — importing it from a check would hang the check and risk corrupting its
+own output. Importing `tools.js` is inert.
+
 ## Entry points
 
-* Process start and every tool registration: `src/index.js`, which is also the `bin`
-  target `mcp-rag-server`.
+* Process start: `src/index.js`.
+* The tool surface, for editing and for checking: `src/tools.js`.
 * Backend calls: `src/apiClient.js`.
 
 ## Running and verifying
@@ -42,8 +48,21 @@ The banner goes to stderr and names the API it reached. Without a token the proc
 with an explanation rather than starting. Full setup, including client configuration:
 [`../../../wiki/environments/setup.md`](../../../wiki/environments/setup.md).
 
-**There is no test suite and no linter.** Verification is running the server against a
-local backend and driving the tool from an MCP client. Report it that way.
+**There is no test suite and no linter.** One check covers the tool surface:
+
+```
+node .agents/wiki/context/mcp-tools.js
+```
+
+It drives the surface twice — once through a spy, to read descriptions as authored and ask
+a zod schema what it accepts, and once through a real `McpServer` and a real `Client` over
+an in-memory transport, to confirm `registerTool` exists, that the schemas convert, and
+what a client actually receives. The second pass is what stops the first from passing
+vacuously. See [`mcp-tools.js`](mcp-tools.js).
+
+Anything beyond the surface — that a call reaches the backend and comes back — is verified
+by running the server against a local backend and driving the tool from an MCP client.
+Report that as manual, not as a suite.
 
 ## Gotchas
 
