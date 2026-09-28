@@ -21,9 +21,9 @@ already has its log directory. See *What this chain does not release* below.
 
 | # | Title | Scope | Repository | Branch | PR |
 |---|---|---|---|---|---|
-| 1 | Task record | this file | mcp | `chore/version-single-source-plan` | |
-| 2 | One source for the version | `package.json`, `src/index.js`, `.agents/memory/state/repository-state.md`, `wiki/guides/claude-desktop-extension.md` | mcp | `fix/version-single-source` | |
-| 3 | Close the record | the `PR` column above | mcp | `chore/version-single-source-release` | |
+| 1 | Task record | this file | mcp | `chore/version-single-source-plan` | #10 |
+| 2 | One source for the version | `package.json`, `src/index.js`, `.agents/memory/state/repository-state.md`, `wiki/guides/claude-desktop-extension.md` | mcp | `fix/version-single-source` | #11 |
+| 3 | Close the record | the `PR` column above | mcp | `chore/version-single-source-release` | #12 |
 
 ## Decisions
 
@@ -92,3 +92,21 @@ permission-scope work landed. Rewriting a record to match a later correction wou
 unreliable as a record of what was known at the time. This chain is where the fix lives,
 and the older record points here.
 
+
+### Task 3 — chore/version-single-source-release
+
+The `PR` column is filled now that the numbers exist, in this commit rather than as a
+follow-up: this branch is the last one open and already contains everything below it, which
+is what makes writing here rebase nothing.
+
+**No version is released by this chain, and no `wiki/logs/` directory is created.** 1.1.0
+shipped on 2026-09-10 and already has its log; this work makes the sources agree with a
+release that happened, and a new version directory would claim something that did not
+happen.
+
+That leaves the chain's one real loose end, unchanged by the merge: **#8 and #9 are in no
+changelog.** The permission-scope correction and the dependency upgrade both landed after
+1.1.0, so the newest documented release does not describe the current code. Releasing them
+as 1.2.0 needs the user's approval and is not assumed here.
+
+Record closed.
