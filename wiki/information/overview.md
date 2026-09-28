@@ -21,13 +21,20 @@ That single fact is what makes an assistant's actions accountable:
 * **The token names the user.** The backend resolves the acting user from it and records
   every call in its audit log, so an action taken by an assistant is attributable to the
   person whose token it used.
-* **The token decides permission.** Owner and admin checks happen in the backend against
-  that user. An assistant cannot claim a role in an argument, which means a prompt injected
-  tool call cannot escalate privileges or act on someone else's project.
+* **The token decides permission.** Scope checks happen in the backend against that user.
+  An assistant cannot claim a role in an argument, so a prompt injected tool call cannot act
+  as a different user or reach a different project.
+
+What the token does **not** do is make the tools injection-proof. A prompt injected call
+can still invoke any tool that the token's user is authorized to invoke. The token fixes
+*who* is acting and *which project* is in reach; it does not decide *whether that user was
+trying*. Two things follow, and both are enforced rather than merely documented: `add_member`
+does not offer `admin`, because that grant is durable and an admin can pass it on, and
+project creation is not reachable from a token at all.
 
 ## What it exposes
 
-Nine tools, in three groups:
+Eight tools, in three groups:
 
 **Identity.** `whoami` and `get_project` report who and what the token is bound to, and
 `get_project` also reports how much of the knowledge base the project's current embedding
@@ -38,8 +45,9 @@ new chunk, and `upload_file` ingests a `.md`, `.txt` or `.pdf`. All three embed 
 they spend the acting user's own OpenRouter credits and fail with a clear message when that
 user has no key configured.
 
-**Project management.** `create_new_project`, `change_project_title`,
-`change_project_description` and `add_member`. The backend gates each on owner or admin.
+**Project management.** `change_project_title`, `change_project_description` and
+`add_member`. The backend gates the first two on write access — the owner, or an editor or
+admin member — and `add_member` on owner or admin, the same test the web app uses.
 
 Every tool, its arguments and what it returns: [../reference/tools.md](../reference/tools.md).
 

@@ -15,8 +15,11 @@ Nine tools, all thin calls to the Express backend:
 * `whoami` and `get_project`, which need no OpenRouter key.
 * `search_knowledge`, `add_knowledge` and `upload_file`, which embed text and therefore
   spend the acting user's own OpenRouter credits.
-* `create_new_project`, `change_project_title`, `change_project_description` and
-  `add_member`, which the backend gates on owner or admin.
+* `change_project_title` and `change_project_description`, which the backend gates on write
+  access — the owner, or an `editor` or `admin` member — and `add_member`, which it gates on
+  owner or admin. `add_member` cannot grant `admin`; that is done in the web app.
+* Project creation is not on this surface. A project token is minted for one project, so
+  `POST /api/mcp/projects` is refused by the backend.
 
 ## Stack
 

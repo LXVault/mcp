@@ -13,6 +13,7 @@ description: Index of .agents/wiki/, the knowledge written for agents working in
 | File | Purpose |
 |---|---|
 | [`../wiki/context/repository-map.md`](../wiki/context/repository-map.md) | Orientation before touching code: what lives where, how to run and verify a tool, and the gotchas that cost time. |
+| [`../wiki/context/mcp-tools.js`](../wiki/context/mcp-tools.js) | Run with `node .agents/wiki/context/mcp-tools.js`. Asserts the registered tool surface: the tool list, the `add_member` role enum, and that no description claims a scope or an injection guarantee the backend does not provide. |
 
 ## Maintenance
 

@@ -23,6 +23,7 @@ because continuity depends on it. Load only the rows whose scope matches the req
 |---|---|
 | [`../memory/tasks/embedding-matrix.md`](../memory/tasks/embedding-matrix.md) | Record of teaching the tool descriptions about embedding coverage: goal, what landed, how it was verified, and the decisions taken. |
 | [`../memory/tasks/agents-setup.md`](../memory/tasks/agents-setup.md) | Record of the instruction system setup: goal, mode, what was created, and the decisions taken. |
+| [`../memory/tasks/mcp-security-scope.md`](../memory/tasks/mcp-security-scope.md) | Record of bringing the tool surface and documentation onto the backend's permission scope, and of closing the admin-grant escalation path. |
 
 ## Maintenance
 

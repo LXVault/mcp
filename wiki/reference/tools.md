@@ -17,7 +17,12 @@ Neither needs an OpenRouter key.
 |---|---|---|
 | `search_knowledge` | `query` (string), `limit` (int 1 to 25, default 5) | Chunks ranked by meaning, each with a similarity score, plus a `coverage` block. See Coverage below. |
 | `add_knowledge` | `content` (string) | The chunk that was created, with its index. |
-| `upload_file` | `filename` (string, extension drives the type check), `content` (UTF-8 text, for `.md` and `.txt`), `content_base64` (for `.pdf`) | The stored file record and its chunk count. Owner or admin only. |
+| `upload_file` | `filename` (string, extension drives the type check), `content` (UTF-8 text, for `.md` and `.txt`), `content_base64` (for `.pdf`) | The stored file record and its chunk count. Owner, editor or admin. |
+
+`add_knowledge` and `upload_file` both write to the knowledge base and need write access —
+the owner, or an `editor` or `admin` member. A `viewer` is refused, and for `add_knowledge`
+it is refused *before* the embedding call, so a read-only token cannot spend the owner's
+OpenRouter credits.
 
 All three embed text and therefore require an OpenRouter key. See the prerequisites below.
 
@@ -25,10 +30,21 @@ All three embed text and therefore require an OpenRouter key. See the prerequisi
 
 | Tool | Arguments | Returns |
 |---|---|---|
-| `create_new_project` | `title` (string), `summary` (string, optional) | The new project, owned by the token's user. |
-| `change_project_title` | `title` (string) | The updated project. Owner or admin only. |
-| `change_project_description` | `description` (string, may be empty) | The updated project. Owner or admin only. |
-| `add_member` | `identifier` (username or email), `role` (`editor`, `viewer` or `admin`, default `editor`) | The member that was added or updated. Owner or admin only. |
+| `change_project_title` | `title` (string) | The updated project. Owner, editor or admin. |
+| `change_project_description` | `description` (string, may be empty) | The updated project. Owner, editor or admin. |
+| `add_member` | `identifier` (username or email), `role` (`editor` or `viewer`, default `editor`) | The member that was added or updated. Owner or admin only. |
+
+**`admin` cannot be granted through this server.** The role enum is `editor` and `viewer`.
+Granting `admin` is done in the web app, by a person. The reason is not ceremony: an
+`admin` can grant `admin` again, so the grant is the one action whose worst outcome is
+durable and quiet, and an assistant can be induced to make it by the text of a document in
+the knowledge base it is reading. See [Authorization and prompt injection
+safety](#authorization-and-prompt-injection-safety) below.
+
+**Project creation is not available here.** A project token is minted for one project, and
+creating a project is not work scoped to that project, so `POST /api/mcp/projects` is
+refused by the backend. Create a project in the web app, then mint a token for it from that
+project's Access Tokens page.
 
 ## Coverage
 
@@ -59,12 +75,32 @@ is written, so it is searchable immediately whatever coverage the rest of the ba
 
 ## Authorization and prompt injection safety
 
-The project management tools never trust a claimed identity or target. The backend resolves
-the acting user and the project **from the API token** and enforces owner and admin server
-side, so a prompt injected tool call cannot escalate privileges or act on another project.
+No tool trusts a claimed identity or target. The backend resolves the acting user and the
+project **from the API token** and enforces the scope server side, so a prompt injected
+tool call cannot act as a different user or reach a different project.
 
 There is no project argument on any tool, and adding one would remove this guarantee rather
 than extend the surface.
+
+**What that guarantee is not.** It is not injection-proofing, and describing it that way
+was the defect this section used to carry. A prompt injected call can still invoke **any
+tool that the token's user is authorized to invoke**. The token fixes *who* is acting and
+*which project* is in reach; it does not decide whether that user was trying. If the
+caller's documents can contain text an attacker controls, the attacker can call anything
+the owner could call.
+
+That is not hypothetical, and it is why two things are enforced rather than documented:
+
+* **`add_member` does not offer `admin`.** The escalation is indirect — a document in the
+  knowledge base, no network position, no credential, no user interaction beyond the owner
+  searching their own base — and the durable part is the grant itself, since an admin can
+  pass it on. `editor` and `viewer` are the most an assistant can grant.
+* **Project creation is not on this surface at all.**
+
+The practical advice, which no amount of server-side checking replaces: mint a token for a
+project whose contents you would still be willing to read if an attacker could write them.
+If the knowledge base ingests third-party documents, that is the risk to weigh before
+connecting it to an assistant.
 
 ## Prerequisites for the knowledge tools
 
