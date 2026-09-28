@@ -1,6 +1,6 @@
 {
   "name": "mcp-rag-mcp-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Model Context Protocol server for the MCP RAG knowledge base. Authenticates with a per-project token so every action is traceable to a user.",
   "type": "module",
   "main": "src/index.js",
