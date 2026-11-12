@@ -77,3 +77,18 @@ Left for the release task: the version is still `1.1.0` in `package.json` and in
 extension guide's manifest. Left stale on purpose: `.agents/rules/repository.md` still
 says `src/tools.js` and that the check runs with `node`. It is an instruction file, so the
 correction is proposed to the owner rather than written here.
+
+### Task 3 — release/2.0.0
+
+- `package.json` and `package-lock.json` at `2.0.0`, approved by the owner on 2026-11-12.
+  The handshake reads it from there, so no source file changes.
+- The extension guide's sample manifest moved to `2.0.0` with the package.
+- `wiki/logs/2/0/0/CHANGELOG.md` and its row in `logs-index.md`. It also carries #8, #9 and
+  #11, which merged after 1.1.0 and appeared in no changelog: they ship in 2.0.0 whether the
+  log names them or not, so it names them.
+- State memory now says `2.0.0`.
+
+Verified on this branch: build clean, `npm test` 65 passed, audit 0 vulnerabilities.
+
+Open: the `PR` column above is filled once the owner allows the pull requests and they
+exist, in a follow-up commit on this branch, and the record is marked done then.
