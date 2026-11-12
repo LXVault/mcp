@@ -1,7 +1,7 @@
 ---
 name: memory-tasks-typescript-migration
 description: Record of migrating the MCP server from JavaScript to TypeScript on current dependencies, released as 2.0.0.
-status: in-progress
+status: done
 ---
 
 # Task: migrate the MCP server to TypeScript
@@ -24,9 +24,9 @@ needed.
 
 | # | Title | Scope | Repository | Branch | PR |
 |---|---|---|---|---|---|
-| 1 | Task record | this file | mcp | `plan/typescript-migration` | |
-| 2 | Migrate to TypeScript | dependencies and audit, `tsconfig.json`, `src/*.ts`, `package.json`, the surface check, `.gitignore`, docs | mcp | `refactor/typescript` | |
-| 3 | Release 2.0.0 | `package.json` version, `wiki/logs/2/0/0/`, log index, close this record | mcp | `release/2.0.0` | |
+| 1 | Task record | this file | mcp | `plan/typescript-migration` | #14 |
+| 2 | Migrate to TypeScript | dependencies and audit, `tsconfig.json`, `src/*.ts`, `package.json`, the surface check, `.gitignore`, docs | mcp | `refactor/typescript` | #15 |
+| 3 | Release 2.0.0 | `package.json` version, `wiki/logs/2/0/0/`, log index, close this record | mcp | `release/2.0.0` | #16 |
 
 ## Decisions
 
@@ -90,5 +90,6 @@ correction is proposed to the owner rather than written here.
 
 Verified on this branch: build clean, `npm test` 65 passed, audit 0 vulnerabilities.
 
-Open: the `PR` column above is filled once the owner allows the pull requests and they
-exist, in a follow-up commit on this branch, and the record is marked done then.
+The owner directed on 2026-11-12 that the three pull requests be opened and merged in order
+with a rebase: #14, then #15, then #16, each rebased onto `master` before it merges. The `PR`
+column is filled and the record is closed here.
