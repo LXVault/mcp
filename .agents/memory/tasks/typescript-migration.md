@@ -43,3 +43,6 @@ assigned, which the branching convention forbids.
 
 The confirmed list, written before any of it is built. No production file is touched.
 Task 2 depends on nothing outside this repository.
+
+`.gitignore` now excludes `.agents/plans/`, at the owner's request on 2026-11-12, so the
+untracked working plan cannot be committed by accident.

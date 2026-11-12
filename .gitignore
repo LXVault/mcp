@@ -7,3 +7,6 @@ npm-debug.log*
 # Packaged Claude Desktop extension bundles
 *.mcpb
 *.dxt
+
+# Untracked working plans (plan_creator)
+.agents/plans/
