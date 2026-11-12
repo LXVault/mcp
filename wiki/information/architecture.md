@@ -3,17 +3,26 @@
 ## Four modules
 
 ```
-src/index.js       the executable: builds the server, connects stdio, refuses to start
-  src/tools.js       unconfigured. The tool surface: registrations, descriptions,
+src/index.ts       the executable: builds the server, connects stdio, refuses to start
+  src/tools.ts       unconfigured. The tool surface: registrations, descriptions,
                      schemas, result rendering
-    src/apiClient.js one method per backend endpoint, the bearer token, error normalization
-      src/config.js  MCP_API_BASE_URL and MCP_API_TOKEN, plus assertConfigured
+    src/apiClient.ts one method per backend endpoint, the bearer token, error normalization
+      src/config.ts  MCP_API_BASE_URL and MCP_API_TOKEN, plus assertConfigured
 ```
 
-ES modules, Node 18 or newer, no build step and no transpiler. `src/index.js` carries a
-shebang and is the package's `bin` target, so it can be run directly or through `npm start`.
+TypeScript in strict mode, compiled by `tsc` (`npm run build`) to ES modules in `dist/`, for
+Node 18 or newer. `tsconfig.json` targets `ES2022` with `NodeNext` module resolution, so
+relative imports carry the `.js` extension of the file they compile to. `dist/index.js`
+carries the shebang and is the package's `bin` target, so it can be run directly or through
+`npm start`. `dist/` is not committed.
 
-`index.js` and `tools.js` are split so the surface can be checked without connecting a
+The types follow the SDK rather than restating it: `registerTools` takes
+`Pick<McpServer, 'registerTool'>` and every handler returns the SDK's `CallToolResult`, so a
+signature change in the SDK fails the build instead of a client. `apiClient` is typed by an
+`ApiClient` interface, one method per endpoint, and leaves the backend's JSON as `unknown`
+because it is rendered as is.
+
+`index.ts` and `tools.ts` are split so the surface can be checked without connecting a
 transport. `index.js` calls `main()` at module load, which takes over this process's stdin
 and stdout; `tools.js` exports `registerTools(server)` and does nothing on import.
 
@@ -45,7 +54,7 @@ understands the check is not something it can talk its way past.
 
 ## Configuration and startup
 
-`src/config.js` reads two variables at import time and strips a trailing slash from the base
+`src/config.ts` reads two variables at import time and strips a trailing slash from the base
 URL. `assertConfigured` runs before the transport connects and throws when `MCP_API_TOKEN`
 is missing, so an unconfigured server exits immediately with an explanation rather than
 starting and failing on the first tool call.

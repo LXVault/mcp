@@ -19,7 +19,7 @@
 //   token should be minted for a project whose contents you would still read if
 //   an attacker could write them.
 //
-// The tools themselves live in `tools.js`, so this file is wiring and nothing
+// The tools themselves live in `tools.ts`, so this file is wiring and nothing
 // else, and the surface can be asserted on without connecting a transport.
 
 import { createRequire } from 'node:module';
@@ -40,7 +40,8 @@ import { registerTools, TOOL_NAMES } from './tools.js';
 // removed in Node 22. Neither loads across the `>=18` this package declares;
 // this does.
 const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
+// From `dist/index.js` and from `src/index.ts` alike, `../package.json` is the package root.
+const { version } = require('../package.json') as { version: string };
 
 const server = new McpServer({
   name: 'mcp-rag-server',
@@ -49,7 +50,7 @@ const server = new McpServer({
 
 registerTools(server);
 
-async function main() {
+async function main(): Promise<void> {
   assertConfigured();
   const transport = new StdioServerTransport();
   await server.connect(transport);
@@ -59,7 +60,7 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error('[mcp-rag-server] fatal:', err.message);
+main().catch((err: unknown) => {
+  console.error('[mcp-rag-server] fatal:', err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

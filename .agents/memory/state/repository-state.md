@@ -7,8 +7,10 @@ description: Current known state of the mcp-rag-mcp-server after the instruction
 
 ## What exists
 
-A working Model Context Protocol server, version `1.1.0`, ES modules, no build step, three
-source files. The version lives in `package.json` and is read from there; `src/index.js`
+A working Model Context Protocol server, version `1.1.0`, TypeScript (strict) compiled by
+`tsc` to ES modules in `dist/`, four source files. `npm run build` compiles, `npm test` runs
+the tool surface check through `tsx`. The version lives in `package.json` and is read from
+there; `src/index.ts`
 no longer carries a second copy that can fall behind it.
 
 Nine tools, all thin calls to the Express backend:
@@ -27,6 +29,9 @@ Nine tools, all thin calls to the Express backend:
 `@modelcontextprotocol/sdk` for the server and the stdio transport, `zod` for argument
 schemas. Two dependencies, deliberately.
 
+Dev-only: `typescript`, `@types/node` and `tsx`. As of 2026-11-12 the SDK is 1.32.2, zod
+4.6.7, TypeScript 7.0.2, and `npm audit` reports 0 vulnerabilities.
+
 ## Shared instruction set
 
 Mode B consumer. The shared set is resolved through the `lxagents-agents-base` MCP
@@ -34,7 +39,7 @@ connector, adopted version `1.0.0`. Nothing from it is copied into this reposito
 
 ## What is not built
 
-* No test suite, no linter configuration, no CI workflow.
+* No linter configuration and no CI workflow. The only automated check is `npm test`.
 * Stdio transport only. No HTTP or SSE transport.
 * No `manifest.json` in the repository. The Claude Desktop bundle is documented as a
   procedure and generated when someone packs one.

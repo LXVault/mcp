@@ -1,6 +1,6 @@
 # Environment Variables
 
-Two variables, read once at import time in `src/config.js`.
+Two variables, read once at import time in `src/config.ts`.
 
 | Variable | Default | Purpose |
 |---|---|---|

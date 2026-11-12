@@ -1,7 +1,7 @@
 // Checks the tool surface this server actually registers.
 //
-// `src/index.js` calls main() at module load, which connects a stdio transport to this
-// process's stdin and stdout — so the surface is checked through `src/tools.js`, which is a
+// `src/index.ts` calls main() at module load, which connects a stdio transport to this
+// process's stdin and stdout — so the surface is checked through `src/tools.ts`, which is a
 // pure function of a server object.
 //
 // This asserts on REGISTERED tools, not on source text. A grep over the source would be
@@ -17,19 +17,20 @@
 //      the only way to know `registerTool` exists, that zod 4 schemas survive conversion to
 //      JSON Schema, and what a client actually receives over the wire.
 //
-//   node .agents/wiki/context/mcp-tools.js
+//   npm test     (runs this file through tsx, against the TypeScript sources)
 
+import type { ZodType } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 
-import { registerTools, TOOL_NAMES } from '../../../src/tools.js';
+import { registerTools, TOOL_NAMES, type ToolRegistrar } from '../../../src/tools.js';
 
 let pass = 0;
 let fail = 0;
-const failures = [];
+const failures: string[] = [];
 
-function check(name, condition, detail) {
+function check(name: string, condition: boolean, detail?: string): void {
   if (condition) {
     pass += 1;
     console.log(`  ok   ${name}`);
@@ -40,27 +41,41 @@ function check(name, condition, detail) {
   }
 }
 
-function eq(name, actual, expected) {
+function eq(name: string, actual: unknown, expected: unknown): void {
   check(name, actual === expected, `got ${JSON.stringify(actual)}, want ${JSON.stringify(expected)}`);
 }
 
 // --- a spy that records the registration calls ----------------------------
 
-const registered = [];
-const deprecatedCalls = [];
-const spy = {
-  registerTool(name, config, cb) {
+interface Registration {
+  name: string;
+  description: string | undefined;
+  schema: Record<string, ZodType> | undefined;
+  cb: unknown;
+}
+
+const registered: Registration[] = [];
+const deprecatedCalls: unknown[] = [];
+const spyImpl = {
+  registerTool(
+    name: string,
+    config: { description?: string; inputSchema?: Record<string, ZodType> },
+    cb: unknown
+  ) {
     registered.push({ name, description: config.description, schema: config.inputSchema, cb });
   },
   // The old registration form. The SDK marks `server.tool()` deprecated on every overload,
   // so a call landing here is a regression rather than a compatibility shim. It is
   // recorded instead of throwing, so the failure names the regression instead of a
   // TypeError from deep inside the check.
-  tool(...args) {
+  tool(...args: unknown[]) {
     deprecatedCalls.push(args[0]);
     return undefined;
   },
 };
+// The spy records rather than registers, so it cannot satisfy the SDK's return type. The
+// real server below is where the signature is held to account.
+const spy = spyImpl as unknown as ToolRegistrar;
 
 const returned = registerTools(spy);
 const byName = new Map(registered.map((t) => [t.name, t]));
@@ -88,19 +103,19 @@ for (const t of registered) {
 // ---------------------------------------------------------------- the enum
 
 console.log('\nadd_member cannot grant admin');
-const addMember = byName.get('add_member');
+const addMember = byName.get('add_member')!;
 // Ask the schema which values it ACCEPTS, rather than reading its internals. The internal
 // shape moved between zod 3 and zod 4, and the check is written to outlive the bump — a
 // check against `_def.values` would have broken on zod 4 for reasons that have nothing to
 // do with what it is checking. safeParse is the behaviour, and it is stable.
-const roleSchema = addMember.schema.role;
-const accepts = (v) => roleSchema.safeParse(v).success;
+const roleSchema = addMember.schema!.role!;
+const accepts = (v: string): boolean => roleSchema.safeParse(v).success;
 eq('editor is an accepted role', accepts('editor'), true);
 eq('viewer is an accepted role', accepts('viewer'), true);
 eq('admin is NOT an accepted role', accepts('admin'), false);
 eq('an invented role is NOT accepted', accepts('superuser'), false);
 check('the description points admin grants at the web app',
-  /web app/i.test(addMember.description), addMember.description);
+  /web app/i.test(addMember.description ?? ''), addMember.description);
 
 // ---------------------------------------------------------------- the claims
 
@@ -121,20 +136,21 @@ for (const phrase of [
 console.log('\nThe write tools name the scope that is actually enforced');
 // canWrite in server-expressjs: the owner, or an editor or admin member.
 for (const name of ['add_knowledge', 'upload_file', 'change_project_title', 'change_project_description']) {
-  const d = byName.get(name).description.toLowerCase();
+  const description = byName.get(name)?.description ?? '';
+  const d = description.toLowerCase();
   check(`${name} says who can use it`,
     /write access/.test(d) || /owner, editor or admin/.test(d),
-    byName.get(name).description);
+    description);
   check(`${name} does not narrow it to owner or admin`, !/owner or admin/.test(d),
-    byName.get(name).description);
+    description);
 }
 
 // The reads must not claim a write scope they do not have, and the writes must not be
 // described as owner-only the way they were before 2.0.0 opened them to an editor.
 check('search_knowledge is not described as needing write access',
-  !/write access/.test(byName.get('search_knowledge').description.toLowerCase()));
+  !/write access/.test((byName.get('search_knowledge')?.description ?? '').toLowerCase()));
 check('whoami is not described as needing write access',
-  !/write access/.test(byName.get('whoami').description.toLowerCase()));
+  !/write access/.test((byName.get('whoami')?.description ?? '').toLowerCase()));
 
 // ------------------------------------------------- a real client, a real server
 //
@@ -173,35 +189,52 @@ for (const t of listed) {
 // The spy proves the enum as authored; this proves it as delivered. A zod 4 upgrade that
 // loosened the schema, or an SDK that stopped converting it, would show up here and
 // nowhere else.
-const wireAddMember = listed.find((t) => t.name === 'add_member');
-const wireRole = wireAddMember.inputSchema.properties.role;
-eq('the wire schema offers exactly two roles', wireRole.enum.length, 2);
-check('and admin is not one of them', !wireRole.enum.includes('admin'),
-  `enum is ${JSON.stringify(wireRole.enum)}`);
+// The wire schema is JSON Schema, which the SDK types as an open record. Name the few
+// properties read below rather than reaching through `unknown` at every step.
+interface WireProperty {
+  type?: string;
+  enum?: string[];
+  minimum?: number;
+  maximum?: number;
+}
+const wireInput = (name: string) => {
+  const tool = listed.find((t) => t.name === name);
+  if (!tool) throw new Error(`${name} was not offered to the client`);
+  return tool.inputSchema as {
+    properties?: Record<string, WireProperty>;
+    required?: string[];
+  };
+};
+
+const wireRole = wireInput('add_member').properties?.role ?? {};
+const wireEnum = wireRole.enum ?? [];
+eq('the wire schema offers exactly two roles', wireEnum.length, 2);
+check('and admin is not one of them', !wireEnum.includes('admin'),
+  `enum is ${JSON.stringify(wireEnum)}`);
 check('editor and viewer both survive zod 4 conversion',
-  wireRole.enum.includes('editor') && wireRole.enum.includes('viewer'),
-  `enum is ${JSON.stringify(wireRole.enum)}`);
+  wireEnum.includes('editor') && wireEnum.includes('viewer'),
+  `enum is ${JSON.stringify(wireEnum)}`);
 
 // zod 4 across a major boundary is exactly where a constraint is quietly dropped, so check
 // the constraints a caller would rely on rather than trusting that they were carried over.
-const wireSearch = listed.find((t) => t.name === 'search_knowledge').inputSchema;
+const wireSearch = wireInput('search_knowledge');
+const wireLimit = wireSearch.properties?.limit;
 eq('search_knowledge requires its query', JSON.stringify(wireSearch.required), '["query"]');
 eq('and its limit stays optional',
-  Object.prototype.hasOwnProperty.call(wireSearch.properties, 'limit'), true);
-eq('the limit bounds survive as integers', wireSearch.properties.limit.type, 'integer');
-eq('the lower bound survives', wireSearch.properties.limit.minimum, 1);
-eq('the upper bound survives', wireSearch.properties.limit.maximum, 25);
+  Object.prototype.hasOwnProperty.call(wireSearch.properties ?? {}, 'limit'), true);
+eq('the limit bounds survive as integers', wireLimit?.type, 'integer');
+eq('the lower bound survives', wireLimit?.minimum, 1);
+eq('the upper bound survives', wireLimit?.maximum, 25);
 
-const wireUpload = listed.find((t) => t.name === 'upload_file').inputSchema;
+const wireUpload = wireInput('upload_file');
 eq('upload_file requires only the filename', JSON.stringify(wireUpload.required), '["filename"]');
 check('and still offers content_base64, snake case as MCP expects',
-  Object.prototype.hasOwnProperty.call(wireUpload.properties, 'content_base64'));
+  Object.prototype.hasOwnProperty.call(wireUpload.properties ?? {}, 'content_base64'));
 
 // The three no-argument tools must arrive as such. A schema that leaked an argument would
 // let a model send one and hang on a call that can never succeed.
 for (const name of ['whoami', 'get_project']) {
-  const s = listed.find((t) => t.name === name).inputSchema;
-  eq(`${name} takes no arguments`, Object.keys(s.properties || {}).length, 0);
+  eq(`${name} takes no arguments`, Object.keys(wireInput(name).properties ?? {}).length, 0);
 }
 
 await realClient.close();

@@ -46,3 +46,34 @@ Task 2 depends on nothing outside this repository.
 
 `.gitignore` now excludes `.agents/plans/`, at the owner's request on 2026-11-12, so the
 untracked working plan cannot be committed by accident.
+
+### Task 2 — refactor/typescript
+
+- Dependencies: SDK 1.30.1 to 1.32.2, zod 4.6.5 to 4.6.7. Added `typescript` 7.0.2,
+  `@types/node` 26.6.6 and `tsx` 4.23.15 as devDependencies. The first audit after the
+  upgrade found 7 transitive vulnerabilities (1 critical, 1 high, 5 moderate) under the
+  SDK's HTTP stack; `npm audit fix` cleared all of them without a forced upgrade.
+- `tsconfig.json`: `ES2022`, `NodeNext` / `NodeNext`, `strict`, `noUncheckedIndexedAccess`,
+  `src` to `dist`, source maps. Only `src/` compiles; the surface check runs through `tsx`.
+- `src/*.js` renamed to `.ts` (history kept with `git mv`). Types added: `Config`,
+  `ApiClient` with one method per endpoint, `ApiError`, `MemberRole`, `UploadFileInput`;
+  `registerTools(server: Pick<McpServer, 'registerTool'>)`, `ToolName` from the
+  `as const` name list, and `CallToolResult` for every rendered result. Caught values are
+  `unknown` and narrowed with `instanceof Error`. No tool, description or schema changed.
+- `package.json`: `main` and `bin` point at `dist/index.js`; `build` (`tsc`), `start`
+  (`node dist/index.js`), `dev`, `test` and `typecheck` scripts. `dist/` is git-ignored.
+- `.agents/wiki/context/mcp-tools.js` became `.ts`, typed, and is `npm test`.
+- Docs moved with the code: README, architecture, setup, env, the Desktop extension guide,
+  the repository map, the agent wiki index, and the state memory.
+
+Verified: `npm run build` and `npm run typecheck` with zero errors; `npm test` 65 passed, 0
+failed, the same 65 the JavaScript check passes on `master`; the check script also
+type-checks clean under the same strict config; `node dist/index.js` over real stdio
+answered `initialize`, listed the same eight tools, returned the unreachable-backend error
+as an `isError` result, wrote only JSON-RPC to stdout, and exited 1 with no token; final
+`npm audit` 0 vulnerabilities.
+
+Left for the release task: the version is still `1.1.0` in `package.json` and in the
+extension guide's manifest. Left stale on purpose: `.agents/rules/repository.md` still
+says `src/tools.js` and that the check runs with `node`. It is an instruction file, so the
+correction is proposed to the owner rather than written here.

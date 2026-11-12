@@ -38,6 +38,7 @@ be willing to read if an attacker could write them.
 
 ```bash
 npm install
+npm run build
 
 MCP_API_BASE_URL=http://localhost:4000/api \
 MCP_API_TOKEN=mcp_xxxxxxxx \
@@ -47,6 +48,9 @@ npm start
 Generate the token from the web app's Access Tokens page. Note that the base URL includes
 `/api`. The server speaks JSON-RPC over stdio, so it is normally launched by an MCP client
 rather than by hand.
+
+The source is TypeScript in `src/`, compiled to `dist/` by `npm run build`. `npm test` runs
+the tool surface check.
 
 ## Documentation
 
