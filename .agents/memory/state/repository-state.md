@@ -7,7 +7,7 @@ description: Current known state of the mcp-rag-mcp-server after the instruction
 
 ## What exists
 
-A working Model Context Protocol server, version `1.1.0`, TypeScript (strict) compiled by
+A working Model Context Protocol server, version `2.0.0`, TypeScript (strict) compiled by
 `tsc` to ES modules in `dist/`, four source files. `npm run build` compiles, `npm test` runs
 the tool surface check through `tsx`. The version lives in `package.json` and is read from
 there; `src/index.ts`
