@@ -25,6 +25,7 @@ because continuity depends on it. Load only the rows whose scope matches the req
 | [`../memory/tasks/agents-setup.md`](../memory/tasks/agents-setup.md) | Record of the instruction system setup: goal, mode, what was created, and the decisions taken. |
 | [`../memory/tasks/mcp-security-scope.md`](../memory/tasks/mcp-security-scope.md) | Record of bringing the tool surface and documentation onto the backend's permission scope, and of closing the admin-grant escalation path. |
 | [`../memory/tasks/version-single-source.md`](../memory/tasks/version-single-source.md) | Record of collapsing the server version to one source and correcting the files that understated a version which had already shipped. |
+| [`../memory/tasks/typescript-migration.md`](../memory/tasks/typescript-migration.md) | Record of migrating the server from JavaScript to TypeScript on current dependencies, released as 2.0.0. |
 
 ## Maintenance
 
