@@ -10,7 +10,11 @@
 
 ```bash
 npm install
+npm run build
 ```
+
+The source is TypeScript; `npm run build` compiles it to `dist/`, which is what runs. Run it
+again after pulling changes, or the client keeps launching the old build.
 
 ```bash
 MCP_API_BASE_URL=http://localhost:4000/api \
@@ -35,7 +39,7 @@ Add it to your MCP client config. For Claude Desktop:
   "mcpServers": {
     "mcp-rag": {
       "command": "node",
-      "args": ["/absolute/path/to/mcp/src/index.js"],
+      "args": ["/absolute/path/to/mcp/dist/index.js"],
       "env": {
         "MCP_API_BASE_URL": "http://localhost:4000/api",
         "MCP_API_TOKEN": "mcp_xxxxxxxx"
@@ -45,7 +49,9 @@ Add it to your MCP client config. For Claude Desktop:
 }
 ```
 
-The path must be absolute. `src/index.js` carries a shebang and is the package's `bin`
+The path must be absolute, and it points at the compiled `dist/index.js`, not at `src/`.
+A config written before 2.0.0 that names `src/index.js` no longer starts: re-point it.
+`dist/index.js` carries a shebang and is the package's `bin`
 entry, so an installed copy can also be launched as `mcp-rag-server`.
 
 For a one click install instead of editing JSON by hand, see
@@ -62,5 +68,14 @@ backend that is down; anything about a token points at `MCP_API_TOKEN`.
 
 ## Testing
 
-There is no test suite and no linter in this repository. Verification is running the server
-against a backend and driving the tool from a client.
+```bash
+npm test
+```
+
+runs the tool surface check through `tsx`, against the TypeScript sources: the registered
+tools, the `add_member` role enum, the claims the descriptions must not make, and what a real
+MCP client receives over an in-memory transport. `npm run typecheck` type-checks without
+writing `dist/`. There is no linter.
+
+Everything past the surface, that a call reaches the backend and comes back, is verified by
+running the server against a backend and driving the tool from a client.

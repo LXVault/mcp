@@ -1,6 +1,6 @@
 // The tool surface, and nothing else.
 //
-// Split out from `index.js` so it can be imported and asserted on. The entry point calls
+// Split out from `index.ts` so it can be imported and asserted on. The entry point calls
 // main() at module load, which connects a stdio transport to this process's stdin and
 // stdout — importing it from a check would hang the check and risk corrupting its own
 // output. Here the surface is a function of a server object, so a check can hand it a spy
@@ -15,21 +15,33 @@
 // `@deprecated Use registerTool instead` was already there in 1.29.0 — this migration is
 // overdue, not newly required. The argument values are identical; only their shape moved.
 
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 import { apiClient } from './apiClient.js';
 
+/**
+ * The one method of `McpServer` this module calls. Typed as a slice of the real class rather
+ * than the class itself, so the surface check can hand in a spy and still be held to the
+ * SDK's own signature.
+ */
+export type ToolRegistrar = Pick<McpServer, 'registerTool'>;
+
+/** A tool name this server registers. */
+export type ToolName = (typeof TOOL_NAMES)[number];
+
 // Render any value as a single MCP text-content result.
-function textResult(value) {
+function textResult(value: unknown): CallToolResult {
   const text =
     typeof value === 'string' ? value : JSON.stringify(value, null, 2);
   return { content: [{ type: 'text', text }] };
 }
 
-function errorResult(err) {
+function errorResult(err: unknown): CallToolResult {
   return {
     isError: true,
-    content: [{ type: 'text', text: `Error: ${err.message || String(err)}` }],
+    content: [{ type: 'text', text: `Error: ${(err instanceof Error && err.message) || String(err)}` }],
   };
 }
 
@@ -43,16 +55,15 @@ export const TOOL_NAMES = [
   'change_project_title',
   'change_project_description',
   'add_member',
-];
+] as const;
 
 /**
  * Register every tool this server exposes.
  *
- * @param {{ registerTool: Function }} server an MCP server, or a spy recording the
- *   registration calls
- * @returns {string[]} the tool names, in registration order
+ * @param server an MCP server, or a spy recording the registration calls
+ * @returns the tool names, in registration order
  */
-export function registerTools(server) {
+export function registerTools(server: ToolRegistrar): readonly ToolName[] {
   // whoami — report the user and project this token is bound to.
   server.registerTool(
     'whoami',

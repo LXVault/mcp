@@ -10,3 +10,6 @@ npm-debug.log*
 
 # Untracked working plans (plan_creator)
 .agents/plans/
+
+# Compiled output of `npm run build`
+dist/

@@ -11,13 +11,16 @@ npm install -g @anthropic-ai/mcpb
 # or run it ad-hoc with: npx @anthropic-ai/mcpb <command>
 ```
 
-## 2. Install production dependencies
+## 2. Build, then keep only production dependencies
 
-The bundle must be self contained, so `node_modules` has to be present when you pack. It is
-included in the `.mcpb` even though git ignores it:
+The bundle runs the compiled `dist/`, so build first, while the TypeScript toolchain is still
+installed. Then prune the devDependencies, because the bundle must be self contained and
+`node_modules` is included in the `.mcpb` even though git ignores it:
 
 ```bash
-npm install --omit=dev
+npm install
+npm run build
+npm prune --omit=dev
 ```
 
 ## 3. Create a `manifest.json`
@@ -42,10 +45,10 @@ API URL and the token, are wired up. A working manifest looks like this:
   "license": "MIT",
   "server": {
     "type": "node",
-    "entry_point": "src/index.js",
+    "entry_point": "dist/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/src/index.js"],
+      "args": ["${__dirname}/dist/index.js"],
       "env": {
         "MCP_API_BASE_URL": "${user_config.api_base_url}",
         "MCP_API_TOKEN": "${user_config.api_token}"

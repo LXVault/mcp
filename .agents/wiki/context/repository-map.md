@@ -10,7 +10,8 @@ Read this before editing anything in `mcp-rag-mcp-server`. Underlying facts live
 
 ## What this is
 
-A Model Context Protocol server, ES modules, Node 18 or newer, no build step. It exposes
+A Model Context Protocol server in TypeScript (strict), compiled by `tsc` to ES modules in
+`dist/`, Node 18 or newer. It exposes
 eight tools over stdio, each a thin call to the Express backend in
 `LXVault/server-expressjs`. What it exposes and why the token matters:
 [`../../../wiki/information/overview.md`](../../../wiki/information/overview.md).
@@ -21,26 +22,31 @@ Four source files, and that is the whole server.
 
 | Path | Holds |
 |---|---|
-| `src/index.js` | The executable and the `bin` target. Builds the `McpServer`, calls `registerTools`, connects the stdio transport, and refuses to start unconfigured. Wiring, and nothing else. |
-| `src/tools.js` | The tool surface: every registration, its description, its schema, and the `textResult` / `errorResult` renderers. Exported as `registerTools(server)`, so a check can drive it with a spy and read back what would be registered. |
-| `src/apiClient.js` | One method per backend endpoint, the bearer token, and error normalization. The only module that calls `fetch`. |
-| `src/config.js` | `MCP_API_BASE_URL` and `MCP_API_TOKEN`, plus `assertConfigured`. |
+| `src/index.ts` | The executable and the `bin` target. Builds the `McpServer`, calls `registerTools`, connects the stdio transport, and refuses to start unconfigured. Wiring, and nothing else. |
+| `src/tools.ts` | The tool surface: every registration, its description, its schema, and the `textResult` / `errorResult` renderers. Exported as `registerTools(server)`, so a check can drive it with a spy and read back what would be registered. |
+| `src/apiClient.ts` | One method per backend endpoint, the bearer token, and error normalization. The only module that calls `fetch`. |
+| `src/config.ts` | `MCP_API_BASE_URL` and `MCP_API_TOKEN`, plus `assertConfigured`. |
 
-The split between `index.js` and `tools.js` exists so the surface can be asserted on.
-`index.js` calls `main()` at module load, which connects a transport to this process's
+`dist/` is build output and is not committed. Relative imports name the `.js` file a module
+compiles to (`./tools.js`), which is what `NodeNext` resolution requires; `tsx` and `tsc`
+both resolve that to the `.ts` source.
+
+The split between `index.ts` and `tools.ts` exists so the surface can be asserted on.
+`index.ts` calls `main()` at module load, which connects a transport to this process's
 stdin and stdout — importing it from a check would hang the check and risk corrupting its
-own output. Importing `tools.js` is inert.
+own output. Importing `tools.ts` is inert.
 
 ## Entry points
 
-* Process start: `src/index.js`.
-* The tool surface, for editing and for checking: `src/tools.js`.
-* Backend calls: `src/apiClient.js`.
+* Process start: `src/index.ts`, compiled to `dist/index.js`.
+* The tool surface, for editing and for checking: `src/tools.ts`.
+* Backend calls: `src/apiClient.ts`.
 
 ## Running and verifying
 
 ```
 npm install
+npm run build
 MCP_API_BASE_URL=http://localhost:4000/api MCP_API_TOKEN=mcp_xxx npm start
 ```
 
@@ -48,17 +54,21 @@ The banner goes to stderr and names the API it reached. Without a token the proc
 with an explanation rather than starting. Full setup, including client configuration:
 [`../../../wiki/environments/setup.md`](../../../wiki/environments/setup.md).
 
-**There is no test suite and no linter.** One check covers the tool surface:
+**There is no linter, and one check covers the tool surface:**
 
 ```
-node .agents/wiki/context/mcp-tools.js
+npm test            # tsx .agents/wiki/context/mcp-tools.ts
+npm run build       # tsc, zero errors expected
 ```
+
+`tsx` strips types without checking them, so `npm test` passing does not mean the code
+type-checks. Run `npm run build` (or `npm run typecheck`) as well.
 
 It drives the surface twice — once through a spy, to read descriptions as authored and ask
 a zod schema what it accepts, and once through a real `McpServer` and a real `Client` over
 an in-memory transport, to confirm `registerTool` exists, that the schemas convert, and
 what a client actually receives. The second pass is what stops the first from passing
-vacuously. See [`mcp-tools.js`](mcp-tools.js).
+vacuously. See [`mcp-tools.ts`](mcp-tools.ts).
 
 Anything beyond the surface — that a call reaches the backend and comes back — is verified
 by running the server against a local backend and driving the tool from an MCP client.
